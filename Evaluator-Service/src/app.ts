@@ -3,6 +3,6 @@ import apiRouter from "./routes/index.js";
 
 const app = express();
 
-app.use("/api",apiRouter)
+app.use("/api", apiRouter);
 
 export default app;
