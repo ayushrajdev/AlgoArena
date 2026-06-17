@@ -31,10 +31,14 @@
   },
   "type": "module",
   "dependencies": {
+    "@types/ioredis": "^4.28.10",
     "@types/mongoose": "^5.11.96",
+    "bullmq": "^5.78.1",
     "concurrently": "^10.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.7.0"
+    "ioredis": "^5.11.1",
+    "mongoose": "^9.7.0",
+    "redis": "^6.0.0"
   }
 }
