@@ -10,6 +10,9 @@ class SampleJob implements IJob {
   }
   handle(job?: Job): void {
     console.log("handler of the job called");
+    console.log(this.payload);
+
+    console.log(job?.name, job?.data);
   }
   failed(job?: Job): void {
     console.log("job failed", job?.id);

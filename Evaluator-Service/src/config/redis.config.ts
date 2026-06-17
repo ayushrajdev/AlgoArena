@@ -1,22 +1,14 @@
-import { createClient } from "redis";
+import { Redis } from "ioredis";
+import serverConfig from "./server.config.js";
 
-const redisClient = createClient({
-  username: "default",
-  password: "2zX4B88iQaF9Pe8o0jkCP7qJ7uJ3Lvk9",
-  socket: {
-    host: "bait-ducks-lightsome-80007.db.redis.io",
-    port: 14071,
-  },
-});
+export const redisConnectionConfig = {
+  host: serverConfig.REDIS_HOST,
+  port: Number(serverConfig.REDIS_PORT),
+  username: serverConfig.REDIS_USERNAME,
+  password: serverConfig.REDIS_PASSWORD,
+};
+const redisConnection = new Redis({ ...redisConnectionConfig, maxRetriesPerRequest: null });
 
-redisClient.on("error", (err) => console.log("Redis Client Error", err));
+redisConnection.on("connect", () => console.log("Successfully connected to Redis!"));
 
-async function connectRedisServer() {
-  return redisClient.connect();
-}
-
-export default connectRedisServer;
-
-// await redisClient.set("foo", "bar");
-// const result = await redisClient.get("foo");
-// console.log(result); // >>> bar
+export default redisConnection;

@@ -1,9 +1,10 @@
 import app from "./app.js";
-import connectRedisServer from "./config/redis.config.js";
 import serverConfig from "./config/server.config.js";
+import sampleQueueProducer from "./producers/sampleQueue.producer.js";
+import sampleWorker from "./workers/sampleWorker.js";
 
-connectRedisServer().then(() => {
-  app.listen(serverConfig.PORT, () => {
-    console.log("server started");
-  });
+app.listen(serverConfig.PORT, () => {
+  sampleWorker({queueName:"SampleQueue"})
+  sampleQueueProducer({ name: "SampleJob", payload: { ok: "done" } });
+  console.log("server started");
 });
