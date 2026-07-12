@@ -28,12 +28,12 @@ export default async function runPythonContainer({
         //         "python3 test.py",
         //     ],
         // });
-        
+
         const pythonDockerContainer = await ContainerFactory.createContainer({
             image: Images.Python,
             cmdExecutable: [
-                '/bin/sh',
-                '-c',
+                "/bin/sh",
+                "-c",
                 `echo '${code.replace(/'/g, `'\\"`)}' > test.py && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | python3 test.py`,
             ],
         });
@@ -52,17 +52,18 @@ export default async function runPythonContainer({
             rawLogBuffer.push(chunk);
         });
 
-        loggerStream.on("end", async (chunk) => {
-            const combinedBuffer = Buffer.concat(rawLogBuffer);
-            // console.log(combinedBuffer);
-
-            const decodedStream = deodeDockerStream(combinedBuffer);
-            // console.log(decodedStream);
-
-            console.log(decodedStream);
+        await new Promise((resolve, reject) => {
+            loggerStream.on("end", async (chunk) => {
+                const combinedBuffer = Buffer.concat(rawLogBuffer);
+                // console.log(combinedBuffer);
+                const decodedStream = deodeDockerStream(combinedBuffer);
+                // console.log(decodedStream);
+                console.log(decodedStream);
+                resolve(decodedStream)
+            });
         });
 
-        console.log("started docker container");
+        await pythonDockerContainer.remove()
 
         return pythonDockerContainer;
     } catch (error) {
