@@ -1,6 +1,6 @@
 import app from "./app.js";
 import serverConfig from "./config/server.config.js";
-import runPythonContainer from "./containers/runPythonDocker.js";
+import runCppDockerContainer from "./containers/runCppDockerContainer.js";
 // import sampleQueueProducer from "./producers/sampleQueueProducer.js";
 // import sampleWorker from "./workers/sampleWorker.js";
 
@@ -9,17 +9,25 @@ app.listen(serverConfig.PORT, () => {
     // sampleQueueProducer({ name: "SampleJob", payload: { ok: "done" }, priority: 2 });
     // sampleQueueProducer({ name: "SampleJob", payload: { ok: "not done" } });
 
-    const code = `x = input()
-y = input()
-print("value of x is", x)
-print("value of y is", y)
+    const code = `
+#include <iostream>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+        for (int i = 1; i <= 10; i++) {
+        std::cout << i << std::endl;
+    }
+    return 0;
+}
+
+  `;
+
+    const inputCase = `10
 `;
 
-const inputCase = `100
-200
-`;
-    runPythonContainer({
+    runCppDockerContainer({
         code,
         inputTestCase: inputCase,
     });
+
 });
