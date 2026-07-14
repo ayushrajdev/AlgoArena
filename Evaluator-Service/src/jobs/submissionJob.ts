@@ -1,4 +1,4 @@
-import { clientCommandMessageReg, type Job } from "bullmq";
+import { type Job } from "bullmq";
 import type { IJob } from "../types/bullMqJob";
 import type { ISubmissionPayload } from "../types/submissionPayload";
 import runCppDockerContainer from "../containers/runCppDockerContainer.js";
