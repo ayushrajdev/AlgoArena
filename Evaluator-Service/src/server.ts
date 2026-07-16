@@ -1,34 +1,34 @@
+import Dockerode from "dockerode";
 import app from "./app.js";
 import serverConfig from "./config/server.config.js";
+import submissionQueueProducer from "./producers/submissionQueueProducer.js";
+import submissionWorker from "./workers/submissionWorker.js";
 // import submissionQueueProducer from "./producers/submissionQueueProducer.js";
 // import submissionWorker from "./workers/submissionWorker.js";
 
-app.listen(serverConfig.PORT, () => {
+app.listen(serverConfig.PORT, async () => {
     // sampleWorker({ queueName: "SampleQueue" });
     // sampleQueueProducer({ name: "SampleJob", payload: { ok: "done" }, priority: 2 });
     // sampleQueueProducer({ name: "SampleJob", payload: { ok: "not done" } });
-    console.log(serverConfig.PORT, typeof serverConfig.PORT);
 
-    // submissionQueueProducer({
-    //     payload: {
-    //         language: "cpp",
-    //         userId: 21121,
-    //         code: `
-    // #include <iostream>
+    submissionQueueProducer({
+        payload: {
+            language: "java",
+            userId: 21121,
+            code: `
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
 
-    // int main() {
-    //     std::cout << "Hello, World!" << std::endl;
-    //         for (int i = 1; i <= 10; i++) {
-    //         std::cout << i << std::endl;
-    //     }
-    //     return 0;
-    // }
+       `,
+            inputCase: "100",
+        },
+    });
+    submissionWorker();
 
-    //    `,
-    //         inputCase: "100",
-    //     },
-    // });
-    // submissionWorker();
+
 
     //     const code = `
     // #include <iostream>

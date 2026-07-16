@@ -1,6 +1,6 @@
 export enum Images {
   Python = "python:3.10",
-  "C++" = "gcc:latest",
+  Cpp = "gcc:latest",
   Typescript = "typescript",
   Java = "eclipse-temurin:11-jdk"
 }
