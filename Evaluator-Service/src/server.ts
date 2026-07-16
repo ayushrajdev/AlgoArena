@@ -1,4 +1,3 @@
-import Dockerode from "dockerode";
 import app from "./app.js";
 import serverConfig from "./config/server.config.js";
 import submissionQueueProducer from "./producers/submissionQueueProducer.js";
