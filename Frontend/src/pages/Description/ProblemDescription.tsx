@@ -40,7 +40,7 @@ function Description({ descriptionText }: { descriptionText: string }) {
                     code,
                     language,
                     userId: '69c23fc6abcc6633382566ba',
-                    problemId: '6671b5e86f909d206b2d40a4',
+                    problemId: '6a5a07859711fcc036c3289f',
                 },
             );
             console.log(response);

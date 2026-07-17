@@ -17,13 +17,14 @@ app.use(genericErrorHandler);
 
 connectDb()
     .then(() => {
-        app.listen(3000, () => {
-            console.log("connected to database")
+        console.log('connected to database');
+        app.listen(serverConfig.PORT, () => {
+            logger.info(`server is listening on port ${serverConfig.PORT}`);
             console.log(serverConfig);
         });
-        logger.error("server started")
+        logger.error('server started');
     })
     .catch((err) => {
-        console.log('could not connect to database')
+        console.log('could not connect to database');
         console.log(err);
     });

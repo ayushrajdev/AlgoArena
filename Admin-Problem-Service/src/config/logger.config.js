@@ -2,28 +2,26 @@ import { MongoClient } from 'mongodb';
 import winston, { format, transports } from 'winston';
 import 'winston-mongodb';
 import { Writable } from 'node:stream';
-import { addToCosmos } from './cosmos.config';
 
-let transports = [
+let loggerTransports = [
     new transports.Console(),
     new transports.File({ filename: 'app.log' }),
 ];
 
-const stream = new Writable({
-    write(chunk, encoding, callback) {
-        let message = chunk.toString();
-        addToCosmos('error', message);
-        callback();
-    },
-});
+// const stream = new Writable({
+//     write(chunk, encoding, callback) {
+//         let message = chunk.toString();
+//         addToCosmos('error', message);
+//         callback();
+//     },
+// });
 
-const streamTransprort = new winston.transports.Stream({ stream });
-transports.push(streamTransprort);
+// const streamTransprort = new winston.transports.Stream({ stream });
+// transports.push(streamTransprort);
 
-transports.push();
 const logger = winston.createLogger({
     level: 'info',
-    transports,
+    transports:loggerTransports,
 
     format: format.combine(
         format.colorize(),

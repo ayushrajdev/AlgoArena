@@ -4,8 +4,8 @@ const serverConfig = {
     REDIS_PORT: Number(process.env.REDIS_PORT),
     REDIS_USERNAME: process.env.REDIS_USERNAME,
     REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+    PROBLEM_ADMIN_SERVICE_URL: process.env.PROBLEM_ADMIN_SERVICE_URL,
 };
-
 
 export enum Server_Queue {
     Submission = 'SubmissionQueue',

@@ -14,7 +14,7 @@ export class SubmissionsRepository {
     async create(createSubmissionDto: CreateSubmissionDto) {
         return await this.submissionSchema.insertOne({
             ...createSubmissionDto,
-            status: SubmissionStatus.Success,
+            status: SubmissionStatus.Pending,
         });
     }
 }
