@@ -1,21 +1,52 @@
-import { Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import SideBar from './components/SideBar';
-import ProblemDescription from './pages/Description/ProblemDescription';
-import ProblemList from './pages/ProblemList/ProblemList';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+// import Navbar from './components/Navbar';
+// import ProblemDescription from './pages/Description/ProblemDescription';
+// import ProblemList from './pages/ProblemList/ProblemList';
+// import LandingPage from './pages/Home/LandingPage';
+// import Login from './pages/Login/Login';
+// import Register from './pages/Register/Register';
+// import ProfilePage from './pages/Profile/Profile';
+
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 import LandingPage from './pages/Home/LandingPage';
+import ProblemList from './pages/ProblemList/ProblemList';
+import ProblemDescription from './pages/Description/ProblemDescription';
 
 function App() {
 
 
   return (
     <div className='h-[100vh] '>
-      <Navbar />
-      <Routes>
+      {/* <Navbar /> */}
+      {/* <Routes>
         <Route path='/problems' element={<ProblemList />} />
         <Route path='/problems/:problemId' element={ <ProblemDescription  />} />
         <Route path='/' element={ <LandingPage  />} />
-      </Routes>
+        <Route path='/login' element={ <Login  />} />
+        <Route path='/register' element={ <Register  />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes> */}
+             <BrowserRouter>
+            <AuthProvider>
+                <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<RegisterPage />} />
+
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/problems" element={<ProblemList />} />
+                        <Route path="/problems/:problemId" element={<ProblemDescription />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                    </Route>
+                </Routes>
+            </AuthProvider>
+        </BrowserRouter>
+      
     </div>
   );
 }
