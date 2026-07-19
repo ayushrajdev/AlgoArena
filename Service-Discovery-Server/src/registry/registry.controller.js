@@ -14,6 +14,9 @@ const registryController = {
         try {
             const { serviceName, instanceId } = req.params;
             const instance = registryService.sendHeartbeat(serviceName, instanceId);
+            console.log(`updating the heartbeat of service ${serviceName} of instance ${instanceId}`);
+            console.log(instance);
+            
             res.status(200).json({ success: true, data: instance });
         } catch (error) {
             next(error);
