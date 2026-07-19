@@ -9,11 +9,12 @@ async function submissionWorker({
     new Worker(
         queueName,
         async function (job: Job) {
-            console.log("inside the job worker");
-
+            
             if (job.name == Queue_Jobs.Submission) {
+                console.log("inside the Submission job worker");
+                
                 var submissionJobInstance = new SubmissionJob(job.data);
-                submissionJobInstance.handle(job);
+                await submissionJobInstance.handle(job);
             }
         },
         {

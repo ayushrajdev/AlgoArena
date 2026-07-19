@@ -12,11 +12,13 @@ const serverConfig = {
 
 export enum Server_Queue {
   Submission = "SubmissionQueue",
-  Sample = "SampleQueue"
+  Sample = "SampleQueue",
+  EvaluationResponse="EvaluationResponseQueue"
 }
 export enum Queue_Jobs {
   Submission = "SubmissionJob",
-  Sample = "SampleJob"
+  Sample = "SampleJob",
+  EvaluationResponse="EvaluationResponseJob"
 }
 
 export default serverConfig;
