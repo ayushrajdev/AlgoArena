@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import { ProblemData } from "../../types/problem.types";
-import Description from "./Description";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { ProblemData } from '../../types/problem.types';
+import Description from './Description';
+import socket from '../../socket';
 
 function ProblemDescription() {
     const { problemId } = useParams<{ problemId: string }>();
@@ -14,7 +15,7 @@ function ProblemDescription() {
         async function fetchProblem() {
             try {
                 const res = await axios.get(
-                    `http://localhost:4000/api/v1/problems/${problemId}`
+                    `http://localhost:4000/api/v1/problems/${problemId}`,
                 );
                 setProblem(res.data.data);
             } catch {
@@ -24,6 +25,18 @@ function ProblemDescription() {
             }
         }
         if (problemId) fetchProblem();
+    }, [problemId]);
+
+    useEffect(() => {
+        socket.emit("send-userId","6a5b4eb9c76790a5681284e9")
+        socket.on('evaluation-response', (data) => {
+            console.log(data);
+            
+        });
+
+        return () => {
+            socket.off('evaluation-response');
+        };
     }, [problemId]);
 
     if (loading) {
@@ -46,3 +59,12 @@ function ProblemDescription() {
 }
 
 export default ProblemDescription;
+
+
+
+
+
+
+
+
+
