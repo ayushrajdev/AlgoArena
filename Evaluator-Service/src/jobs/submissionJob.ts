@@ -16,14 +16,16 @@ export default class SubmissionJob implements IJob {
     async handle(job?: Job): Promise<void> {
         if (!job) return;
 
-        const { code, language, inputTestCase, outputTestCase } = job.data as ISubmissionPayload;
+        const { code, language, inputTestCase, outputTestCase, userId, submissionId, problemId } =
+            job.data as ISubmissionPayload;
 
         console.log("Submission Job Started");
 
         if (inputTestCase.length !== outputTestCase.length) {
             throw new Error("Input and Output test case count mismatch.");
         }
-
+        console.log('calling executor ');
+        
         const executor = CodeExecutorFactory.get(language);
 
         if (!executor) {
@@ -56,18 +58,21 @@ export default class SubmissionJob implements IJob {
                 console.log("Input    :", inputTestCase[i]);
                 console.log("Expected :", expected);
                 console.log("Actual   :", actual);
-                EvaluationResponseQueueProducer({ payload: { result: result.stderr } });
+                EvaluationResponseQueueProducer({
+                    payload: { submissionId, userId, problemId, error: true },
+                });
 
                 return;
             }
-            
+
             console.log(`✅ Test Case ${i + 1} Passed`);
         }
-        EvaluationResponseQueueProducer({payload:{success:true,}})
-        
+        EvaluationResponseQueueProducer({
+            payload: { submissionId, userId, problemId, error: false },
+        });
+
         console.log("🎉 Accepted");
     }
-    
 
     failed(job?: Job): void {
         console.log("Submission Failed:", job?.id);
