@@ -13,6 +13,21 @@ async function EvaluationResponseWorker({
         async function (job: Job) {
             if (job.name == Queue_Jobs.EvaluationResponse) {
                 console.log(`handling the job `,job.data);
+
+                const res = await fetch("http://localhost:9000/api/v1/evaluation-response",{
+                    body:JSON.stringify({...job.data}),
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    }
+                })
+
+                const payload = await res.json()
+                console.log(payload);
+                
+
+
+       
                 
                 await EvaluationResponseJob.handle(job)
 

@@ -30,6 +30,10 @@ export class SubmissionsService {
 
         createSubmissionDto.code = `${languageCodeStubs?.startSnippet ?? ''}\n${createSubmissionDto?.code ?? ''}\n${languageCodeStubs?.endSnippet ?? ''}`;
 
+        const submissionId = await this.submissionsRepository.create({
+            ...createSubmissionDto,
+            code: createSubmissionDto.code,
+        });
         await submissionQueueProducer({
             payload: {
                 code: createSubmissionDto.code,
@@ -38,13 +42,10 @@ export class SubmissionsService {
                 userId: createSubmissionDto.userId,
                 inputTestCase,
                 outputTestCase,
+                submissionId
             },
         });
 
-        await this.submissionsRepository.create({
-            ...createSubmissionDto,
-            code: createSubmissionDto.code,
-        });
         return true
     }
 }
