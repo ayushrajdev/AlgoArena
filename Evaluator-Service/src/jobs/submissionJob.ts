@@ -16,16 +16,37 @@ export default class SubmissionJob implements IJob {
     async handle(job?: Job): Promise<void> {
         if (!job) return;
 
-        const { code, language, inputTestCase, outputTestCase, userId, submissionId, problemId } =
-            job.data as ISubmissionPayload;
+        const {
+            code,
+            language,
+            inputTestCase,
+            outputTestCase,
+            userId,
+            submissionId,
+            problemId,
+            timeLimit,
+            memoryLimit,
+        } = job.data as ISubmissionPayload;
+
+        console.log("inside the job handler", {
+            code,
+            language,
+            inputTestCase,
+            outputTestCase,
+            userId,
+            submissionId,
+            problemId,
+            timeLimit,
+            memoryLimit,
+        });
 
         console.log("Submission Job Started");
 
         if (inputTestCase.length !== outputTestCase.length) {
             throw new Error("Input and Output test case count mismatch.");
         }
-        console.log('calling executor ');
-        
+        console.log("calling executor ");
+
         const executor = CodeExecutorFactory.get(language);
 
         if (!executor) {
@@ -34,13 +55,46 @@ export default class SubmissionJob implements IJob {
 
         for (let i = 0; i < inputTestCase.length; i++) {
             console.log(`Running Test Case ${i + 1}`);
+            let result;
+            try {
+                result = await executor.execute({
+                    code,
+                    inputTestCase: inputTestCase[i] as string,
+                    memoryLimit: Number(memoryLimit) ?? 256,
+                    timeLimit: Number(timeLimit) ?? 1000,
+                });
+            } catch (err: any) {
+                if (err instanceof Error && err.message === "Time Limit Exceeded") {
+                    console.log("Time Limit Exceeded");
 
-            const result = await executor.execute({
-                code,
-                inputTestCase: inputTestCase[i] as string,
-            });
+                    EvaluationResponseQueueProducer({
+                        payload: {
+                            submissionId,
+                            userId,
+                            problemId,
+                            verdict: "TIME_LIMIT_EXCEEDED",
+                            error: true,
+                            data: err.message,
+                        },
+                    });
+                    return
+                }
+                EvaluationResponseQueueProducer({
+                    payload: {
+                        submissionId,
+                        userId,
+                        problemId,
+                        verdict: "Error",
+                        error: true,
+                        data: err.message ?? "",
+                    },
+                });
 
-            const actual = result.stdout.trim();
+                // throw err;
+                return;
+            }
+
+            const actual = result?.stdout.trim();
             const expected = outputTestCase[i]?.trim();
 
             console.log("Actual:", JSON.stringify(actual));
@@ -49,7 +103,14 @@ export default class SubmissionJob implements IJob {
             if (result.stderr.trim().length > 0) {
                 console.log("Runtime Error");
                 console.log(result.stderr);
-                EvaluationResponseQueueProducer({ payload: { result: result.stderr } });
+                EvaluationResponseQueueProducer({ payload: {
+                        submissionId,
+                        userId,
+                        problemId,
+                        verdict: "Error",
+                        error: true,
+                        data: result.stderr
+                    }, });
                 return;
             }
 
@@ -68,7 +129,7 @@ export default class SubmissionJob implements IJob {
             console.log(`✅ Test Case ${i + 1} Passed`);
         }
         EvaluationResponseQueueProducer({
-            payload: { submissionId, userId, problemId, error: false },
+            payload: { submissionId, userId, problemId, error: false, data: {} },
         });
 
         console.log("🎉 Accepted");

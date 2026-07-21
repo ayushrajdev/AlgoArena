@@ -1,80 +1,70 @@
-// import type IDockerStreamOutput from "../types/dockerStreamOutput.js";
 // import ContainerFactory from "../factories/ContainerFactory.js";
 // import { deodeDockerStream } from "../containers/dockerHelper.js";
+// import type IDockerStreamOutput from "../types/dockerStreamOutput.js";
 
 // export default abstract class BaseCodeExecutor {
 //     abstract image: string;
 //     abstract buildCommand(code: string, inputTestCase: string): string;
 
-//     async fetchDecodedStream(
-//         loggerStream: NodeJS.ReadableStream,
-//         rawLogBuffer: Buffer[]
-//     ): Promise<IDockerStreamOutput> {
-//         return await new Promise((resolve, reject) => {
-//             loggerStream.on("end", async (chunk) => {
-//                 const combinedBuffer = Buffer.concat(rawLogBuffer);
-//                 console.log('combinedBuffer:', combinedBuffer)
-//                 const decodedStream = deodeDockerStream(combinedBuffer);
-//                 console.log('decodedStream:', decodedStream)
-//                 resolve(decodedStream);
-//             });
-//         });
-//     }
+//     async execute({
+//         code,
+//         inputTestCase,
+//         timeLimit,
+//         memoryLimit,
+//     }: {
+//         code: string;
+//         inputTestCase: string;
+//         timeLimit: number;
+//         memoryLimit: number;
+//     }): Promise<IDockerStreamOutput> {
+//         const cmd = this.buildCommand(code, inputTestCase);
 
-//     async execute({ code, inputTestCase }: { code: string; inputTestCase: string }): Promise<any> {
-//         console.log("inside tge execute method of submission job handler ", {
-//             code,
-//             inputTestCase,
-//         });
-//         var rawLogBuffer: Buffer[] = [];
-//         var cmd = this.buildCommand(code, inputTestCase);
-//         console.log(cmd);
-//         var languageDockerContainer = await ContainerFactory.createContainer({
+//         const container = await ContainerFactory.createContainer({
 //             image: this.image,
 //             cmdExecutable: ["/bin/sh", "-c", cmd],
+//             memoryLimit,
 //         });
+
+//         const rawLogBuffer: Buffer[] = [];
+
 //         try {
-//             console.log("Starting container...");
-//             // starting/booting the python container
-//             await languageDockerContainer.start();
-//             console.log("Container started");
-//             const loggerStream = await languageDockerContainer.logs({
-//                 stderr: true,
+//             await container.start();
+
+//             const loggerStream = await container.logs({
 //                 stdout: true,
+//                 stderr: true,
+//                 follow: true,
 //                 timestamps: false,
-//                 follow: true, // wheather the logs are streamed or returned as single string
 //             });
 
-//             //we can attach events on stream object tob start and stop reading
-//             loggerStream.on("data", async (chunk) => {
-//                 console.log("Received log chunk");
-//                 console.log(chunk.toString());
-                
+//             loggerStream.on("data", (chunk: Buffer) => {
 //                 rawLogBuffer.push(chunk);
 //             });
 
-//             console.log("Waiting for container to finish...");
+//             await container.wait();
 
+//             // Wait a little to ensure all logs are received
+//             await new Promise((resolve) => setTimeout(resolve, 20));
 
-//             console.log("Container finished");
-  
+//             const combinedBuffer = Buffer.concat(rawLogBuffer);
 
-//             const response: IDockerStreamOutput = await this.fetchDecodedStream(
-//                 loggerStream,
-//                 rawLogBuffer
-//             );
-//             console.log('response:', response)
+//             const decodedOutput = deodeDockerStream(combinedBuffer);
 
-//             return response;
-//         } catch (error) {
-//             console.log(error);
+//             return decodedOutput;
+//         } catch (err) {
+//             return {
+//                 stdout: "",
+//                 stderr: err instanceof Error ? err.message : String(err),
+//             };
 //         } finally {
-//             await languageDockerContainer.remove();
+//             try {
+//                 await container.remove({ force: true });
+//             } catch (err) {
+//                 console.error("Failed to remove container:", err);
+//             }
 //         }
 //     }
 // }
-
-
 
 import ContainerFactory from "../factories/ContainerFactory.js";
 import { deodeDockerStream } from "../containers/dockerHelper.js";
@@ -87,44 +77,71 @@ export default abstract class BaseCodeExecutor {
     async execute({
         code,
         inputTestCase,
+        timeLimit,
+        memoryLimit,
     }: {
         code: string;
         inputTestCase: string;
+        timeLimit: number;
+        memoryLimit: number;
     }): Promise<IDockerStreamOutput> {
         const cmd = this.buildCommand(code, inputTestCase);
+        console.log(cmd);
+        
 
         const container = await ContainerFactory.createContainer({
             image: this.image,
             cmdExecutable: ["/bin/sh", "-c", cmd],
+            memoryLimit,
         });
 
         const rawLogBuffer: Buffer[] = [];
 
         try {
-            await container.start();
+            const executionPromise = (async () => {
+                await container.start();
 
-            const loggerStream = await container.logs({
-                stdout: true,
-                stderr: true,
-                follow: true,
-                timestamps: false,
+                const loggerStream = await container.logs({
+                    stdout: true,
+                    stderr: true,
+                    follow: true,
+                    timestamps: false,
+                });
+
+                loggerStream.on("data", (chunk: Buffer) => {
+                    rawLogBuffer.push(chunk);
+                });
+
+                await container.wait();
+
+                // Wait a little so Docker flushes all logs
+                await new Promise((resolve) => setTimeout(resolve, 20));
+
+                const combinedBuffer = Buffer.concat(rawLogBuffer);
+
+                return deodeDockerStream(combinedBuffer);
+            })();
+
+            const timeoutPromise = new Promise<IDockerStreamOutput>((_, reject) => {
+                setTimeout(async () => {
+                    try {
+                        await container.kill();
+                    } catch {
+                        // container may have already exited
+                    }
+
+                    reject(new Error("Time Limit Exceeded"));
+                }, timeLimit);
             });
 
-            loggerStream.on("data", (chunk: Buffer) => {
-                rawLogBuffer.push(chunk);
-            });
+            return await Promise.race([executionPromise, timeoutPromise]);
+        } catch (err:any) {
+            console.log(err.message);
+            
+            if (err instanceof Error && err.message === "Time Limit Exceeded") {
+                throw err;
+            }
 
-            await container.wait();
-
-            // Wait a little to ensure all logs are received
-            await new Promise((resolve) => setTimeout(resolve, 20));
-
-            const combinedBuffer = Buffer.concat(rawLogBuffer);
-
-            const decodedOutput = deodeDockerStream(combinedBuffer);
-
-            return decodedOutput;
-        } catch (err) {
             return {
                 stdout: "",
                 stderr: err instanceof Error ? err.message : String(err),

@@ -9,4 +9,7 @@ export interface ISubmissionPayload {
     problemId?: string;
     userId?: string;
     submissionId?: string;
+
+    timeLimit,
+    memoryLimit,
 }

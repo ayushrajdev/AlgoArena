@@ -7,6 +7,8 @@ export const redisConnectionConfig = {
     username: serverConfig.REDIS_USERNAME,
     password: serverConfig.REDIS_PASSWORD,
 };
+console.log(redisConnectionConfig);
+
 const redisConnection = new Redis({
     ...redisConnectionConfig,
     maxRetriesPerRequest: null,
@@ -14,5 +16,17 @@ const redisConnection = new Redis({
 });
 
 redisConnection.on("connect", () => console.log("Successfully connected to Redis!"));
+process.on("SIGINT", async () => {
+    console.log(`succesfully closing the redis connection`);
+    
+    await redisConnection.quit(); // Tells Redis to close gracefully
+    process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+    console.log(`succesfully closing the redis connection`);
+    await redisConnection.quit();
+    process.exit(0);
+});
 
 export default redisConnection;

@@ -1,12 +1,17 @@
 import Docker from "dockerode";
 import pullDockerImage from "../containers/pullDockerImage.js";
 
-type createContainer = { image: string; cmdExecutable: string[]; env?: string[] };
+type createContainer = {
+    image: string;
+    cmdExecutable: string[];
+    env?: string[];
+    memoryLimit: number;
+};
 
 export default class ContainerFactory {
     constructor() {}
 
-    static async createContainer({ image, cmdExecutable, env }: createContainer) {
+    static async createContainer({ image, cmdExecutable, env, memoryLimit }: createContainer) {
         console.log("Creating Docker client...");
         const docker = new Docker();
         console.log("Listing images...");
@@ -25,7 +30,11 @@ export default class ContainerFactory {
             AttachStdin: true, // to enable input streams
             AttachStdout: true, // to enable output strams,
             Tty: false,
+
             OpenStdin: true, //input stream is enabled if there is no interaction with the container
+            HostConfig: {
+                Memory: 1024 * 1024 * memoryLimit,
+            },
         });
         console.log("Container created:", container.id);
 
