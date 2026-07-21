@@ -11,9 +11,15 @@ export class SubmissionsService {
     ) {}
 
     async createSubmission(createSubmissionDto: CreateSubmissionDto) {
+        let timeLimit = 3000;
+        let memoryLimit = 256;
         const problemDetails = await ProblemAdminServiceApi.fetchProblem(
             createSubmissionDto.problemId,
         );
+        timeLimit = problemDetails.timeLimit;
+        memoryLimit = problemDetails.memoryLimit;
+
+        console.log({ timeLimit, memoryLimit, problemDetails });
 
         if (!problemDetails) {
             throw new Error('problem not found !! try a valid problem');
@@ -30,10 +36,24 @@ export class SubmissionsService {
 
         createSubmissionDto.code = `${languageCodeStubs?.startSnippet ?? ''}\n${createSubmissionDto?.code ?? ''}\n${languageCodeStubs?.endSnippet ?? ''}`;
 
-        const submissionId = await this.submissionsRepository.create({
-            ...createSubmissionDto,
+        const submissionId = await this.submissionsRepository.create(
+            {
+                ...createSubmissionDto,
+                code: createSubmissionDto.code,
+            },
+            timeLimit,
+            memoryLimit,
+        );
+        console.log({
+            codeStubs,
+            testCases,
+            inputTestCase,
+            outputTestCase,
+            languageCodeStubs,
+            submissionId,
             code: createSubmissionDto.code,
         });
+
         await submissionQueueProducer({
             payload: {
                 code: createSubmissionDto.code,
@@ -42,10 +62,12 @@ export class SubmissionsService {
                 userId: createSubmissionDto.userId,
                 inputTestCase,
                 outputTestCase,
-                submissionId
+                submissionId,
+                timeLimit,
+                memoryLimit,
             },
         });
 
-        return true
+        return true;
     }
 }

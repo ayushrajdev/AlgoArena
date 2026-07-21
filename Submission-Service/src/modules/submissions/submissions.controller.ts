@@ -10,6 +10,7 @@ export class SubmissionsController {
     @Post()
     async createSubmission(@Body() createSubmissionDto: CreateSubmissionDto) {
         try {
+            console.log('createSubmissionDto: with the user id is the following', createSubmissionDto)
             const response =
                 await this.submissionService.createSubmission(
                     createSubmissionDto,

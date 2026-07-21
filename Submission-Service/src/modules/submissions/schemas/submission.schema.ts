@@ -20,7 +20,16 @@ const submissionSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'success', 'runtime_error'],
+        enum: ['pending', 'success', 'error'],
+    },
+    timeLimit: {
+        type: Number,
+        default: 1000, // milliseconds
+    },
+
+    memoryLimit: {
+        type: Number,
+        default: 256, // MB
     },
 });
 

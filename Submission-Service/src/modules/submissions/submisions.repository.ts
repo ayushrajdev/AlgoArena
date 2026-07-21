@@ -11,10 +11,20 @@ export class SubmissionsRepository {
         this.submissionSchema = Submission;
     }
 
-    async create(createSubmissionDto: CreateSubmissionDto) {
-        return (await this.submissionSchema.insertOne({
-            ...createSubmissionDto,
-            status: SubmissionStatus.Pending,
-        })).id;
+    async create(
+        createSubmissionDto: CreateSubmissionDto,
+        timeLimit,
+        memoryLimit,
+    ) {
+
+    
+        return (
+            await this.submissionSchema.insertOne({
+                ...createSubmissionDto,
+                status: SubmissionStatus.Pending,
+                timeLimit,
+                memoryLimit,
+            })
+        ).id;
     }
 }

@@ -4,6 +4,7 @@ import serverConfig, {
     Server_Queue,
 } from '../config/server.config.js';
 import EvaluationResponseJob from '../jobs/evaluationResponseQueueJob.js';
+import Submission from '../modules/submissions/schemas/submission.schema.js';
 
 async function EvaluationResponseWorker({
     queueName = Server_Queue.EvaluationResponse,
@@ -12,25 +13,43 @@ async function EvaluationResponseWorker({
         queueName,
         async function (job: Job) {
             if (job.name == Queue_Jobs.EvaluationResponse) {
-                console.log(`handling the job `,job.data);
+                console.log(`handling the job `, job.data);
 
-                const res = await fetch("http://localhost:9000/api/v1/evaluation-response",{
-                    body:JSON.stringify({...job.data}),
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/json"
-                    }
-                })
+                const { submissionId, userId, problemId, error, data } =
+                    job.data;
+                console.log(
+                    '{ submissionId, userId, problemId, error, data }:',
+                    { submissionId, userId, problemId, error, data },
+                );
 
-                const payload = await res.json()
-                console.log(payload);
-                
+                const res = await fetch(
+                    'http://localhost:9000/api/v1/evaluation-response',
+                    {
+                        body: JSON.stringify({ ...job.data }),
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    },
+                );
 
+                if (job.data.error) {
+                    await Submission.findByIdAndUpdate(submissionId, {
+                        $set: {
+                            status: 'error',
+                        },
+                    });
+                } else {
+                    await Submission.findByIdAndUpdate(submissionId, {
+                        $set: {
+                            status: 'success',
+                        },
+                    });
+                }
 
-       
-                
-                await EvaluationResponseJob.handle(job)
+                const payload = await res.json();
 
+                await EvaluationResponseJob.handle(job);
             }
         },
         {
